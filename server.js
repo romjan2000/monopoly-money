@@ -116,48 +116,7 @@ function serializeGame(game) {
         players: Array.from(game.players.values()).filter(p => !p.bankrupt),
         allPlayers: Array.from(game.players.values()),
         votes: Array.from(game.votes.entries()),
-        transactions: game.transactions.slice(-50),
-        winnerId: game.winnerId || null,
-        winnerName: game.winnerName || null
     };
-}
-
-// Helper: check if only 1 player remains (winner detection)
-function checkWinner(game) {
-    if (game.state !== 'playing') return;
-    const alive = Array.from(game.players.values()).filter(p => !p.bankrupt);
-    if (alive.length === 1) {
-        const winner = alive[0];
-        game.state = 'ended';
-        game.winnerId = winner.id;
-        game.winnerName = winner.name;
-
-        // Calculate stats for all players
-        const stats = Array.from(game.players.values()).map(p => {
-            let totalEarned = 0, totalSpent = 0;
-            game.transactions.forEach(tx => {
-                if (tx.type === 'system') return;
-                if (tx.toId === p.id) totalEarned += (tx.amount || 0);
-                if (tx.fromId === p.id) totalSpent += (tx.amount || 0);
-            });
-            return { id: p.id, name: p.name, emoji: p.emoji, balance: p.balance, totalEarned, totalSpent, bankrupt: p.bankrupt };
-        });
-
-        game.transactions.push({
-            id: Date.now(),
-            type: 'system',
-            message: `🏆 ${winner.emoji} ${winner.name} WINS THE GAME!`,
-            timestamp: new Date().toISOString()
-        });
-
-        io.to(game.code).emit('game-won', {
-            winnerId: winner.id,
-            winnerName: winner.name,
-            winnerEmoji: winner.emoji,
-            winnerBalance: winner.balance,
-            stats
-        });
-    }
 }
 
 // Helper: sanitize player name
@@ -637,7 +596,6 @@ io.on('connection', (socket) => {
         socket.leave(game.code);
 
         io.to(game.code).emit('game-update', serializeGame(game));
-        checkWinner(game);
         cb?.({ success: true });
     });
 
@@ -886,7 +844,7 @@ io.on('connection', (socket) => {
                     games.delete(game.code);
                     console.log(`🗑️ Game ${game.code} removed (all disconnected)`);
                 }
-            }, 60000); // 1 minute grace period
+            }, 5 * 60 * 1000); // 5 minute grace period for reconnection
         }
     });
 

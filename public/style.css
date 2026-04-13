@@ -2618,3 +2618,56 @@ body:not([class*="theme-"]) .theme-bg-effects::after {
   0% { transform: translate(0, 0) scale(1); }
   100% { transform: translate(30px, -20px) scale(1.2); }
 }
+
+/* ═══ RECONNECTING OVERLAY ═══ */
+.reconnect-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reconnect-overlay.hidden {
+  display: none;
+}
+
+.reconnect-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.reconnect-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-glass);
+  border-top: 4px solid var(--accent);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.reconnect-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.reconnect-info {
+  font-size: 14px;
+  color: var(--text-secondary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

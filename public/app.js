@@ -248,8 +248,11 @@ createParticles();
     }
 })();
 
-// ─── Auto-Rejoin on Page Load ───
+// ─── Auto-Reconnect System ───
 socket.on('connect', () => {
+    const overlay = document.getElementById('reconnect-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
     const session = getSavedSession();
     if (session) {
         socket.emit('rejoin', { code: session.code, playerName: session.name }, (res) => {
@@ -265,6 +268,20 @@ socket.on('connect', () => {
             }
         });
     }
+});
+
+socket.on('disconnect', (reason) => {
+    // Only show overlay if we're in a game (have a saved session)
+    const session = getSavedSession();
+    if (session) {
+        const overlay = document.getElementById('reconnect-overlay');
+        if (overlay) overlay.classList.remove('hidden');
+    }
+    console.log('🔌 Disconnected:', reason);
+});
+
+socket.on('reconnect_failed', () => {
+    showToast('❌ Could not reconnect. Please refresh the page.', 'error');
 });
 
 // ─── Splash Buttons ───
