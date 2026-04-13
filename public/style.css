@@ -1,5 +1,91 @@
 /* ═══════════════════════════════════════════
-   MONOPOLY MONEY — Premium Dark Theme
+   MONOPOLY MONEY — Multi-Theme System
+   6 Themes: 3 Dark + 3 Light
+   ═══════════════════════════════════════════ */
+
+/* ═══ THEME BG EFFECTS CONTAINER ═══ */
+.theme-bg-effects {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ─── THEME PICKER ─── */
+.theme-picker {
+  text-align: center;
+  margin-bottom: 12px;
+  z-index: 2;
+  position: relative;
+}
+
+.theme-picker-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.theme-orbs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.theme-orb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--border-glass);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+  padding: 0;
+}
+
+.theme-orb:active {
+  transform: scale(0.9);
+}
+
+.theme-orb.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: scale(1.1);
+}
+
+.orb-inner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: block;
+}
+
+.orb-inner.midnight { background: linear-gradient(135deg, #1a1a3e, #7c6cf0); }
+.orb-inner.ocean { background: linear-gradient(135deg, #0a2342, #00b4d8); }
+.orb-inner.inferno { background: linear-gradient(135deg, #1a0000, #ff4500); }
+.orb-inner.cherry { background: linear-gradient(135deg, #fce4ec, #f48fb1); }
+.orb-inner.emerald { background: linear-gradient(135deg, #e8f5e9, #4caf50); }
+.orb-inner.sunset { background: linear-gradient(135deg, #fff3e0, #ff9800); }
+
+.orb-name {
+  font-size: 10px;
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ═══════════════════════════════════════════
+   THEME 1: MIDNIGHT GALAXY (Dark – Default)
    ═══════════════════════════════════════════ */
 
 :root {
@@ -2031,4 +2117,504 @@ body {
 
 .stat-balance.zero {
   color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════
+   THEME 2: OCEAN ABYSS (Dark)
+   ═══════════════════════════════════════════ */
+body.theme-ocean {
+  background: linear-gradient(-45deg, #020c1b, #0a2342, #0d3b66, #020c1b);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+body.theme-ocean :root,
+body.theme-ocean {
+  --bg-primary: #020c1b;
+  --bg-secondary: #0a1929;
+  --bg-card: rgba(0, 180, 216, 0.06);
+  --bg-card-hover: rgba(0, 180, 216, 0.12);
+  --bg-glass: rgba(0, 180, 216, 0.08);
+  --border-glass: rgba(0, 180, 216, 0.15);
+  --border-subtle: rgba(0, 180, 216, 0.08);
+  --text-primary: #e0f7fa;
+  --text-secondary: rgba(224, 247, 250, 0.65);
+  --text-muted: rgba(224, 247, 250, 0.35);
+  --accent: #00b4d8;
+  --accent-glow: rgba(0, 180, 216, 0.35);
+  --accent-2: #48cae4;
+  --accent-2-glow: rgba(72, 202, 228, 0.3);
+  --success: #00e5a0;
+  --success-bg: rgba(0, 229, 160, 0.12);
+  --danger: #ff6b6b;
+  --danger-bg: rgba(255, 107, 107, 0.12);
+  --gold: #90e0ef;
+  --gold-bg: rgba(144, 224, 239, 0.12);
+}
+
+body.theme-ocean .splash-bg {
+  background: radial-gradient(ellipse at bottom, #0d3b66 0%, #020c1b 100%);
+}
+
+/* Ocean bubbles */
+.theme-ocean .theme-bg-effects .bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 180, 216, 0.15), transparent);
+  border: 1px solid rgba(0, 180, 216, 0.12);
+  animation: bubbleRise linear infinite;
+}
+
+@keyframes bubbleRise {
+  0% {
+    transform: translateY(100vh) scale(0.5);
+    opacity: 0;
+  }
+  20% { opacity: 0.6; }
+  80% { opacity: 0.6; }
+  100% {
+    transform: translateY(-50px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Ocean wave overlay */
+.theme-ocean .theme-bg-effects::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -50%;
+  width: 200%;
+  height: 200px;
+  background: radial-gradient(ellipse at center, rgba(0, 180, 216, 0.08) 0%, transparent 70%);
+  animation: oceanWave 8s ease-in-out infinite;
+}
+
+@keyframes oceanWave {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(5%) translateY(-15px); }
+  50% { transform: translateX(-3%) translateY(-5px); }
+  75% { transform: translateX(3%) translateY(-20px); }
+}
+
+/* ═══════════════════════════════════════════
+   THEME 3: INFERNO (Dark)
+   ═══════════════════════════════════════════ */
+body.theme-inferno {
+  background: linear-gradient(-45deg, #0a0000, #1a0000, #2d0000, #0a0000);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+body.theme-inferno {
+  --bg-primary: #0a0000;
+  --bg-secondary: #1a0a0a;
+  --bg-card: rgba(255, 69, 0, 0.06);
+  --bg-card-hover: rgba(255, 69, 0, 0.12);
+  --bg-glass: rgba(255, 69, 0, 0.08);
+  --border-glass: rgba(255, 69, 0, 0.15);
+  --border-subtle: rgba(255, 69, 0, 0.08);
+  --text-primary: #fff0e6;
+  --text-secondary: rgba(255, 240, 230, 0.65);
+  --text-muted: rgba(255, 240, 230, 0.35);
+  --accent: #ff4500;
+  --accent-glow: rgba(255, 69, 0, 0.35);
+  --accent-2: #ff8c00;
+  --accent-2-glow: rgba(255, 140, 0, 0.3);
+  --success: #ff6347;
+  --success-bg: rgba(255, 99, 71, 0.12);
+  --danger: #ff1744;
+  --danger-bg: rgba(255, 23, 68, 0.15);
+  --gold: #ffab40;
+  --gold-bg: rgba(255, 171, 64, 0.12);
+}
+
+body.theme-inferno .splash-bg {
+  background: radial-gradient(ellipse at bottom, #2d0000 0%, #0a0000 100%);
+}
+
+/* Ember particles */
+.theme-inferno .theme-bg-effects .ember {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff6600, #ff4500, transparent);
+  box-shadow: 0 0 6px 2px rgba(255, 69, 0, 0.4);
+  animation: emberFloat linear infinite;
+}
+
+@keyframes emberFloat {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0);
+    opacity: 0;
+  }
+  15% { opacity: 1; transform: translateY(80vh) translateX(10px) scale(1); }
+  40% { transform: translateY(50vh) translateX(-15px) scale(0.8); }
+  70% { transform: translateY(20vh) translateX(20px) scale(0.5); opacity: 0.7; }
+  100% {
+    transform: translateY(-20px) translateX(-5px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Fire glow at bottom */
+.theme-inferno .theme-bg-effects::before {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  left: -10%;
+  width: 120%;
+  height: 250px;
+  background: radial-gradient(ellipse at center bottom, rgba(255, 69, 0, 0.15) 0%, rgba(255, 140, 0, 0.05) 40%, transparent 70%);
+  animation: fireGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes fireGlow {
+  0% { opacity: 0.6; transform: scaleX(1); }
+  100% { opacity: 1; transform: scaleX(1.1); }
+}
+
+/* ═══════════════════════════════════════════
+   THEME 4: CHERRY BLOSSOM (Light)
+   ═══════════════════════════════════════════ */
+body.theme-cherry {
+  background: linear-gradient(-45deg, #fff0f5, #fce4ec, #f8bbd0, #fff0f5);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+body.theme-cherry {
+  --bg-primary: #fff5f8;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(236, 64, 122, 0.06);
+  --bg-card-hover: rgba(236, 64, 122, 0.1);
+  --bg-glass: rgba(236, 64, 122, 0.06);
+  --border-glass: rgba(236, 64, 122, 0.18);
+  --border-subtle: rgba(236, 64, 122, 0.08);
+  --text-primary: #3e2723;
+  --text-secondary: rgba(62, 39, 35, 0.6);
+  --text-muted: rgba(62, 39, 35, 0.35);
+  --accent: #ec407a;
+  --accent-glow: rgba(236, 64, 122, 0.25);
+  --accent-2: #f48fb1;
+  --accent-2-glow: rgba(244, 143, 177, 0.3);
+  --success: #43a047;
+  --success-bg: rgba(67, 160, 71, 0.1);
+  --danger: #e53935;
+  --danger-bg: rgba(229, 57, 53, 0.1);
+  --gold: #f9a825;
+  --gold-bg: rgba(249, 168, 37, 0.1);
+  --shadow-sm: 0 2px 8px rgba(236, 64, 122, 0.08);
+  --shadow-md: 0 4px 20px rgba(236, 64, 122, 0.1);
+  --shadow-lg: 0 8px 40px rgba(236, 64, 122, 0.12);
+}
+
+body.theme-cherry .splash-bg {
+  background: radial-gradient(ellipse at top, #fce4ec 0%, #fff0f5 100%);
+}
+
+body.theme-cherry .btn-secondary {
+  background: rgba(236, 64, 122, 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(236, 64, 122, 0.2);
+}
+
+body.theme-cherry .logo-title {
+  background: linear-gradient(135deg, #ec407a, #f48fb1, #ec407a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Cherry blossom petals */
+.theme-cherry .theme-bg-effects .petal {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #f8bbd0, #f48fb1);
+  border-radius: 50% 0 50% 0;
+  opacity: 0.4;
+  animation: petalFall linear infinite;
+}
+
+@keyframes petalFall {
+  0% {
+    transform: translateY(-20px) translateX(0) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  10% { opacity: 0.5; }
+  50% {
+    transform: translateY(50vh) translateX(40px) rotate(180deg) scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(105vh) translateX(-20px) rotate(360deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Soft pink glow */
+.theme-cherry .theme-bg-effects::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(236, 64, 122, 0.06) 0%, transparent 70%);
+  animation: pinkGlow 6s ease-in-out infinite alternate;
+}
+
+@keyframes pinkGlow {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-40px, 40px) scale(1.3); }
+}
+
+/* ═══════════════════════════════════════════
+   THEME 5: EMERALD GARDEN (Light)
+   ═══════════════════════════════════════════ */
+body.theme-emerald {
+  background: linear-gradient(-45deg, #f1f8e9, #e8f5e9, #c8e6c9, #f1f8e9);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+body.theme-emerald {
+  --bg-primary: #f5faf5;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(76, 175, 80, 0.06);
+  --bg-card-hover: rgba(76, 175, 80, 0.1);
+  --bg-glass: rgba(76, 175, 80, 0.06);
+  --border-glass: rgba(76, 175, 80, 0.18);
+  --border-subtle: rgba(76, 175, 80, 0.08);
+  --text-primary: #1b5e20;
+  --text-secondary: rgba(27, 94, 32, 0.6);
+  --text-muted: rgba(27, 94, 32, 0.35);
+  --accent: #2e7d32;
+  --accent-glow: rgba(46, 125, 50, 0.25);
+  --accent-2: #66bb6a;
+  --accent-2-glow: rgba(102, 187, 106, 0.3);
+  --success: #2e7d32;
+  --success-bg: rgba(46, 125, 50, 0.1);
+  --danger: #c62828;
+  --danger-bg: rgba(198, 40, 40, 0.1);
+  --gold: #f9a825;
+  --gold-bg: rgba(249, 168, 37, 0.1);
+  --shadow-sm: 0 2px 8px rgba(76, 175, 80, 0.08);
+  --shadow-md: 0 4px 20px rgba(76, 175, 80, 0.1);
+  --shadow-lg: 0 8px 40px rgba(76, 175, 80, 0.12);
+}
+
+body.theme-emerald .splash-bg {
+  background: radial-gradient(ellipse at top, #e8f5e9 0%, #f5faf5 100%);
+}
+
+body.theme-emerald .btn-secondary {
+  background: rgba(46, 125, 50, 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+body.theme-emerald .logo-title {
+  background: linear-gradient(135deg, #2e7d32, #66bb6a, #2e7d32);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Floating leaves */
+.theme-emerald .theme-bg-effects .leaf {
+  position: absolute;
+  font-size: 16px;
+  opacity: 0.3;
+  animation: leafDrift linear infinite;
+}
+
+@keyframes leafDrift {
+  0% {
+    transform: translateY(-30px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% { opacity: 0.35; }
+  50% {
+    transform: translateY(50vh) translateX(-30px) rotate(180deg);
+  }
+  100% {
+    transform: translateY(105vh) translateX(30px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Green orb glow */
+.theme-emerald .theme-bg-effects::before {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.06) 0%, transparent 70%);
+  animation: greenGlow 7s ease-in-out infinite alternate;
+}
+
+@keyframes greenGlow {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -30px) scale(1.2); }
+}
+
+/* ═══════════════════════════════════════════
+   THEME 6: GOLDEN SUNSET (Light)
+   ═══════════════════════════════════════════ */
+body.theme-sunset {
+  background: linear-gradient(-45deg, #fff8e1, #ffecb3, #ffe0b2, #fff8e1);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+body.theme-sunset {
+  --bg-primary: #fffaf0;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 152, 0, 0.06);
+  --bg-card-hover: rgba(255, 152, 0, 0.1);
+  --bg-glass: rgba(255, 152, 0, 0.06);
+  --border-glass: rgba(255, 152, 0, 0.18);
+  --border-subtle: rgba(255, 152, 0, 0.08);
+  --text-primary: #3e2723;
+  --text-secondary: rgba(62, 39, 35, 0.6);
+  --text-muted: rgba(62, 39, 35, 0.35);
+  --accent: #ef6c00;
+  --accent-glow: rgba(239, 108, 0, 0.25);
+  --accent-2: #ffb74d;
+  --accent-2-glow: rgba(255, 183, 77, 0.3);
+  --success: #2e7d32;
+  --success-bg: rgba(46, 125, 50, 0.1);
+  --danger: #c62828;
+  --danger-bg: rgba(198, 40, 40, 0.1);
+  --gold: #ef6c00;
+  --gold-bg: rgba(239, 108, 0, 0.1);
+  --shadow-sm: 0 2px 8px rgba(255, 152, 0, 0.08);
+  --shadow-md: 0 4px 20px rgba(255, 152, 0, 0.1);
+  --shadow-lg: 0 8px 40px rgba(255, 152, 0, 0.12);
+}
+
+body.theme-sunset .splash-bg {
+  background: radial-gradient(ellipse at top, #ffecb3 0%, #fffaf0 100%);
+}
+
+body.theme-sunset .btn-secondary {
+  background: rgba(239, 108, 0, 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(239, 108, 0, 0.2);
+}
+
+body.theme-sunset .logo-title {
+  background: linear-gradient(135deg, #ef6c00, #ffb74d, #ef6c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Sun rays */
+.theme-sunset .theme-bg-effects .ray {
+  position: absolute;
+  top: -100px;
+  width: 3px;
+  height: 300px;
+  background: linear-gradient(to bottom, rgba(255, 183, 77, 0.12), transparent);
+  transform-origin: top center;
+  animation: rayPulse 5s ease-in-out infinite alternate;
+}
+
+@keyframes rayPulse {
+  0% { opacity: 0.2; transform: scaleY(0.8); }
+  100% { opacity: 0.5; transform: scaleY(1.2); }
+}
+
+/* Warm sun glow */
+.theme-sunset .theme-bg-effects::before {
+  content: '';
+  position: absolute;
+  top: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255, 183, 77, 0.1) 0%, rgba(255, 152, 0, 0.04) 40%, transparent 70%);
+  animation: sunGlow 8s ease-in-out infinite alternate;
+}
+
+@keyframes sunGlow {
+  0% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+  100% { transform: translateX(-50%) scale(1.3); opacity: 1; }
+}
+
+/* Floating sparkles */
+.theme-sunset .theme-bg-effects .sparkle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 183, 77, 0.5);
+  box-shadow: 0 0 8px rgba(255, 183, 77, 0.3);
+  animation: sparkleFloat linear infinite;
+}
+
+@keyframes sparkleFloat {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  20% { opacity: 0.6; transform: translateY(80vh) scale(1); }
+  80% { opacity: 0.4; }
+  100% {
+    transform: translateY(-20px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ═══ MIDNIGHT STARS BG EFFECT ═══ */
+.theme-midnight .theme-bg-effects .star,
+body:not([class*="theme-"]) .theme-bg-effects .star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: white;
+  animation: starTwinkle ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.5); }
+}
+
+/* Nebula glow for midnight */
+.theme-midnight .theme-bg-effects::before,
+body:not([class*="theme-"]) .theme-bg-effects::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 30%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(124, 108, 240, 0.06) 0%, transparent 70%);
+  animation: nebulaDrift 10s ease-in-out infinite alternate;
+}
+
+.theme-midnight .theme-bg-effects::after,
+body:not([class*="theme-"]) .theme-bg-effects::after {
+  content: '';
+  position: absolute;
+  bottom: 10%;
+  right: 20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(0, 212, 200, 0.05) 0%, transparent 70%);
+  animation: nebulaDrift 12s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes nebulaDrift {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -20px) scale(1.2); }
 }

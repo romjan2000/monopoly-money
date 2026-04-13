@@ -12,6 +12,9 @@
 </head>
 
 <body>
+    <!-- Dynamic Background Effects (theme-specific) -->
+    <div class="theme-bg-effects" id="theme-bg-effects"></div>
+
     <!-- ═══ SPLASH SCREEN ═══ -->
     <div id="screen-splash" class="screen active">
         <div class="splash-bg"></div>
@@ -22,6 +25,38 @@
                 <h1 class="logo-title">MONOPOLY<br><span>MONEY</span></h1>
                 <p class="logo-subtitle">Digital Banking System</p>
             </div>
+
+            <!-- Theme Picker -->
+            <div class="theme-picker" id="theme-picker">
+                <p class="theme-picker-label">🎨 Choose Theme</p>
+                <div class="theme-orbs">
+                    <button class="theme-orb active" data-theme="midnight" title="Midnight Galaxy">
+                        <span class="orb-inner midnight"></span>
+                        <span class="orb-name">🌌</span>
+                    </button>
+                    <button class="theme-orb" data-theme="ocean" title="Ocean Abyss">
+                        <span class="orb-inner ocean"></span>
+                        <span class="orb-name">🌊</span>
+                    </button>
+                    <button class="theme-orb" data-theme="inferno" title="Inferno">
+                        <span class="orb-inner inferno"></span>
+                        <span class="orb-name">🔥</span>
+                    </button>
+                    <button class="theme-orb" data-theme="cherry" title="Cherry Blossom">
+                        <span class="orb-inner cherry"></span>
+                        <span class="orb-name">🌸</span>
+                    </button>
+                    <button class="theme-orb" data-theme="emerald" title="Emerald Garden">
+                        <span class="orb-inner emerald"></span>
+                        <span class="orb-name">🌿</span>
+                    </button>
+                    <button class="theme-orb" data-theme="sunset" title="Golden Sunset">
+                        <span class="orb-inner sunset"></span>
+                        <span class="orb-name">☀️</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="splash-actions">
                 <button id="btn-create" class="btn btn-primary btn-lg">
                     <span class="btn-icon">🎮</span> Create Game

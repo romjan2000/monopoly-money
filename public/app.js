@@ -68,6 +68,151 @@ function showScreen(name) {
     screens[name].classList.add('active');
 }
 
+// ─── Theme System ───
+const THEME_EFFECTS = {
+    midnight: { type: 'stars', count: 50 },
+    ocean: { type: 'bubbles', count: 25 },
+    inferno: { type: 'embers', count: 30 },
+    cherry: { type: 'petals', count: 18 },
+    emerald: { type: 'leaves', count: 15 },
+    sunset: { type: 'rays+sparkles', rayCount: 12, sparkleCount: 20 }
+};
+
+function applyTheme(themeName) {
+    // Remove all theme classes
+    document.body.className = document.body.className.replace(/theme-\S+/g, '').trim();
+    
+    // Apply new theme class (midnight uses default :root)
+    if (themeName !== 'midnight') {
+        document.body.classList.add('theme-' + themeName);
+    }
+    document.body.classList.add('theme-' + themeName); // always add for bg effects targeting
+
+    // Update theme orb selection
+    document.querySelectorAll('.theme-orb').forEach(orb => {
+        orb.classList.toggle('active', orb.dataset.theme === themeName);
+    });
+
+    // Generate background effects
+    generateThemeBgEffects(themeName);
+
+    // Save preference
+    localStorage.setItem('mm_theme', themeName);
+}
+
+function generateThemeBgEffects(themeName) {
+    const container = document.getElementById('theme-bg-effects');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    const config = THEME_EFFECTS[themeName];
+    if (!config) return;
+
+    if (config.type === 'stars') {
+        for (let i = 0; i < config.count; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.width = (1 + Math.random() * 2.5) + 'px';
+            star.style.height = star.style.width;
+            star.style.animationDuration = (2 + Math.random() * 4) + 's';
+            star.style.animationDelay = Math.random() * 5 + 's';
+            container.appendChild(star);
+        }
+    }
+
+    if (config.type === 'bubbles') {
+        for (let i = 0; i < config.count; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            const size = 10 + Math.random() * 40;
+            b.style.width = size + 'px';
+            b.style.height = size + 'px';
+            b.style.left = Math.random() * 100 + '%';
+            b.style.animationDuration = (6 + Math.random() * 10) + 's';
+            b.style.animationDelay = Math.random() * 8 + 's';
+            container.appendChild(b);
+        }
+    }
+
+    if (config.type === 'embers') {
+        for (let i = 0; i < config.count; i++) {
+            const e = document.createElement('div');
+            e.className = 'ember';
+            const size = 2 + Math.random() * 5;
+            e.style.width = size + 'px';
+            e.style.height = size + 'px';
+            e.style.left = Math.random() * 100 + '%';
+            e.style.animationDuration = (4 + Math.random() * 8) + 's';
+            e.style.animationDelay = Math.random() * 6 + 's';
+            container.appendChild(e);
+        }
+    }
+
+    if (config.type === 'petals') {
+        for (let i = 0; i < config.count; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            const size = 8 + Math.random() * 14;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = (7 + Math.random() * 10) + 's';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            container.appendChild(p);
+        }
+    }
+
+    if (config.type === 'leaves') {
+        const leafEmojis = ['🍃', '🌿', '🍀', '🌱'];
+        for (let i = 0; i < config.count; i++) {
+            const l = document.createElement('div');
+            l.className = 'leaf';
+            l.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
+            l.style.left = Math.random() * 100 + '%';
+            l.style.fontSize = (12 + Math.random() * 12) + 'px';
+            l.style.animationDuration = (8 + Math.random() * 12) + 's';
+            l.style.animationDelay = Math.random() * 10 + 's';
+            container.appendChild(l);
+        }
+    }
+
+    if (config.type === 'rays+sparkles') {
+        // Sun rays
+        for (let i = 0; i < config.rayCount; i++) {
+            const r = document.createElement('div');
+            r.className = 'ray';
+            r.style.left = (10 + (i / config.rayCount) * 80) + '%';
+            r.style.transform = `rotate(${-15 + (i * 30 / config.rayCount)}deg)`;
+            r.style.animationDelay = (i * 0.3) + 's';
+            r.style.height = (200 + Math.random() * 200) + 'px';
+            container.appendChild(r);
+        }
+        // Sparkles
+        for (let i = 0; i < config.sparkleCount; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            s.style.left = Math.random() * 100 + '%';
+            s.style.animationDuration = (5 + Math.random() * 8) + 's';
+            s.style.animationDelay = Math.random() * 6 + 's';
+            container.appendChild(s);
+        }
+    }
+}
+
+// Theme Picker click handler
+document.querySelectorAll('.theme-orb').forEach(orb => {
+    orb.addEventListener('click', () => {
+        applyTheme(orb.dataset.theme);
+        vibrate();
+    });
+});
+
+// Load saved theme or default
+const savedTheme = localStorage.getItem('mm_theme') || 'midnight';
+applyTheme(savedTheme);
+
 // ─── Floating Particles (Splash Screen) ───
 function createParticles() {
     const container = $('#particles');
