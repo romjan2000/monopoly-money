@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monopoly Money</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- ═══ SPLASH SCREEN ═══ -->
+    <div id="screen-splash" class="screen active">
+        <div class="splash-bg"></div>
+        <div class="splash-content">
+            <div class="logo-container">
+                <div class="logo-icon">💰</div>
+                <h1 class="logo-title">MONOPOLY<br><span>MONEY</span></h1>
+                <p class="logo-subtitle">Digital Banking System</p>
+            </div>
+            <div class="splash-actions">
+                <button id="btn-create" class="btn btn-primary btn-lg">
+                    <span class="btn-icon">🎮</span> Create Game
+                </button>
+                <button id="btn-join" class="btn btn-secondary btn-lg">
+                    <span class="btn-icon">🔗</span> Join Game
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ CREATE GAME SCREEN ═══ -->
+    <div id="screen-create" class="screen">
+        <div class="screen-header">
+            <button class="btn-back" id="btn-back-create">←</button>
+            <h2>Create Game</h2>
+        </div>
+        <div class="screen-body">
+            <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="input-host-name" placeholder="Enter your name" maxlength="12" class="input">
+            </div>
+            <div class="form-group">
+                <label>Starting Money</label>
+                <div class="money-selector">
+                    <button class="money-btn" data-amount="1000">৳1000</button>
+                    <button class="money-btn active" data-amount="1500">৳1500</button>
+                    <button class="money-btn" data-amount="2000">৳2000</button>
+                    <button class="money-btn" data-amount="2500">৳2500</button>
+                </div>
+                <input type="number" id="input-start-money" value="1500" class="input input-small"
+                    placeholder="Custom amount">
+            </div>
+            <button id="btn-create-go" class="btn btn-primary btn-lg btn-full">
+                <span class="btn-icon">✨</span> Create Room
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══ JOIN GAME SCREEN ═══ -->
+    <div id="screen-join" class="screen">
+        <div class="screen-header">
+            <button class="btn-back" id="btn-back-join">←</button>
+            <h2>Join Game</h2>
+        </div>
+        <div class="screen-body">
+            <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="input-join-name" placeholder="Enter your name" maxlength="12" class="input">
+            </div>
+            <div class="form-group">
+                <label>Room Code</label>
+                <div class="code-input-group">
+                    <input type="text" id="input-code-1" class="code-digit" maxlength="1" inputmode="numeric">
+                    <input type="text" id="input-code-2" class="code-digit" maxlength="1" inputmode="numeric">
+                    <input type="text" id="input-code-3" class="code-digit" maxlength="1" inputmode="numeric">
+                    <input type="text" id="input-code-4" class="code-digit" maxlength="1" inputmode="numeric">
+                </div>
+            </div>
+            <button id="btn-join-go" class="btn btn-primary btn-lg btn-full">
+                <span class="btn-icon">🚀</span> Join Room
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══ LOBBY SCREEN ═══ -->
+    <div id="screen-lobby" class="screen">
+        <div class="screen-header">
+            <h2>Game Lobby</h2>
+            <div class="room-code-badge" id="lobby-code">----</div>
+        </div>
+        <div class="screen-body">
+            <div class="lobby-info">
+                <p>Starting Money: <strong id="lobby-start-money">৳1500</strong></p>
+                <p>Players: <strong id="lobby-count">0/6</strong></p>
+            </div>
+            <div class="lobby-players" id="lobby-players"></div>
+            <div id="lobby-host-actions" class="lobby-actions hidden">
+                <button id="btn-start-voting" class="btn btn-primary btn-lg btn-full">
+                    <span class="btn-icon">🗳️</span> Start Banker Vote
+                </button>
+            </div>
+            <div class="lobby-waiting hidden" id="lobby-waiting">
+                <div class="pulse-dot"></div>
+                <p>Waiting for host to start...</p>
+            </div>
+            <button id="btn-leave-lobby" class="btn btn-ghost btn-full leave-btn">
+                🚪 Leave Game
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══ VOTING SCREEN ═══ -->
+    <div id="screen-voting" class="screen">
+        <div class="screen-header">
+            <h2>🗳️ Vote for Banker</h2>
+        </div>
+        <div class="screen-body">
+            <p class="vote-subtitle">Choose who should control the bank</p>
+            <div class="vote-candidates" id="vote-candidates"></div>
+            <div class="vote-status" id="vote-status">
+                <div class="pulse-dot"></div>
+                <p>Waiting for all votes...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ GAME SCREEN ═══ -->
+    <div id="screen-game" class="screen">
+        <!-- Player Balance Grid (top) -->
+        <div class="balance-grid" id="balance-grid"></div>
+
+        <!-- My Wallet -->
+        <div class="my-wallet" id="my-wallet">
+            <div class="wallet-label">Your Balance</div>
+            <div class="wallet-amount" id="my-balance">৳0</div>
+            <div class="wallet-name" id="my-name">Player</div>
+        </div>
+
+        <!-- Mode Toggle (Banker only) -->
+        <div class="mode-toggle hidden" id="mode-toggle">
+            <button class="mode-btn active" data-mode="player" id="mode-player-btn">
+                <span>👤</span> Player
+            </button>
+            <button class="mode-btn" data-mode="bank" id="mode-bank-btn">
+                <span>🏦</span> Bank
+            </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="game-actions" id="game-actions">
+            <div id="player-actions">
+                <button class="action-btn action-send" id="btn-send-player">
+                    <span class="action-icon">💸</span>
+                    <span class="action-label">Send to Player</span>
+                </button>
+                <button class="action-btn action-bank" id="btn-pay-bank">
+                    <span class="action-icon">🏦</span>
+                    <span class="action-label">Pay Bank</span>
+                </button>
+            </div>
+            <div id="bank-actions" class="hidden">
+                <button class="action-btn action-give" id="btn-bank-give">
+                    <span class="action-icon">💵</span>
+                    <span class="action-label">Give Money</span>
+                </button>
+                <button class="action-btn action-take" id="btn-bank-take">
+                    <span class="action-icon">🏧</span>
+                    <span class="action-label">Collect Money</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <button class="history-toggle" id="btn-history-toggle">
+            📜 Transaction History
+            <span class="history-badge hidden" id="history-badge">0</span>
+        </button>
+        <div class="transaction-history hidden" id="transaction-history">
+            <div class="history-list" id="history-list"></div>
+        </div>
+
+        <!-- Leave Game -->
+        <button id="btn-leave-game" class="btn btn-ghost btn-full leave-btn">
+            🚪 Leave Game
+        </button>
+    </div>
+
+    <!-- ═══ TRANSFER MODAL (streamlined single-page) ═══ -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal" id="transfer-modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Send Money</h3>
+                <button class="modal-close" id="btn-modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Player Selection (hidden for pay-bank) -->
+                <div id="modal-section-player">
+                    <p class="modal-step-label">To</p>
+                    <div class="player-chips" id="modal-player-chips"></div>
+                </div>
+
+                <!-- Amount Input -->
+                <div id="modal-section-amount">
+                    <p class="modal-step-label">Amount</p>
+                    <div class="amount-input-group">
+                        <span class="currency-sign">৳</span>
+                        <input type="number" id="input-amount" class="input input-amount" placeholder="0"
+                            inputmode="numeric">
+                    </div>
+                    <div class="quick-amounts">
+                        <button class="quick-amt" data-amount="50">৳50</button>
+                        <button class="quick-amt" data-amount="100">৳100</button>
+                        <button class="quick-amt" data-amount="200">৳200</button>
+                        <button class="quick-amt" data-amount="500">৳500</button>
+                    </div>
+                </div>
+
+                <!-- Reason Selection -->
+                <div id="modal-section-reason">
+                    <p class="modal-step-label">Reason <span class="optional-tag">optional</span></p>
+                    <div class="reason-list" id="reason-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-lg btn-full" id="btn-confirm-tx">
+                    <span class="btn-icon">✓</span> Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ BANKRUPT POPUP ═══ -->
+    <div class="modal-overlay hidden" id="bankrupt-overlay">
+        <div class="bankrupt-popup">
+            <div class="bankrupt-icon">💀</div>
+            <h3 class="bankrupt-title">Insufficient Funds!</h3>
+            <p class="bankrupt-info" id="bankrupt-info">You need ৳500 but only have ৳200</p>
+            <div class="bankrupt-actions">
+                <button class="btn btn-danger btn-lg" id="btn-bankrupt">
+                    💀 Go Bankrupt
+                </button>
+                <button class="btn btn-secondary btn-lg" id="btn-think">
+                    🤔 Let me think
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ CONFIRM LEAVE POPUP ═══ -->
+    <div class="modal-overlay hidden" id="leave-overlay">
+        <div class="bankrupt-popup">
+            <div class="bankrupt-icon">🚪</div>
+            <h3 class="bankrupt-title">Leave Game?</h3>
+            <p class="bankrupt-info">You will lose all your money and leave the game.</p>
+            <div class="bankrupt-actions">
+                <button class="btn btn-danger btn-lg" id="btn-confirm-leave">
+                    Yes, Leave
+                </button>
+                <button class="btn btn-secondary btn-lg" id="btn-cancel-leave">
+                    Stay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ TOAST CONTAINER ═══ -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
