@@ -1698,3 +1698,337 @@ body {
     background-position: 0% 50%;
   }
 }
+
+/* ═══ যাত্রা শুরু (GO Money) Button ═══ */
+.go-money-section {
+  padding: 8px 20px 0;
+}
+
+.go-money-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #00b894, #00cec9, #0984e3);
+  background-size: 200% 200%;
+  animation: goGradient 3s ease infinite;
+  border: none;
+  border-radius: var(--radius-lg);
+  color: white;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 184, 148, 0.4);
+}
+
+@keyframes goGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.go-money-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+}
+
+.go-money-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: goShimmer 4s ease-in-out infinite;
+}
+
+@keyframes goShimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.go-money-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 12px rgba(0, 184, 148, 0.3);
+}
+
+.go-money-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: none;
+}
+
+.go-money-btn:disabled::after {
+  animation: none;
+}
+
+.go-money-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.go-money-text-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.go-money-text {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.go-money-subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.go-money-amount {
+  font-size: 22px;
+  font-weight: 900;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+/* GO Request Popup (Banker approval) */
+.go-request-popup {
+  border: 2px solid rgba(0, 184, 148, 0.3);
+  box-shadow: 0 8px 40px rgba(0, 184, 148, 0.15);
+}
+
+@media (max-width: 360px) {
+  .go-money-text {
+    font-size: 15px;
+  }
+
+  .go-money-amount {
+    font-size: 18px;
+  }
+
+  .go-money-icon {
+    font-size: 24px;
+  }
+}
+
+/* ═══ FLOATING PARTICLES (Splash Screen) ═══ */
+.particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  font-size: 20px;
+  opacity: 0.15;
+  animation: particleFloat linear infinite;
+  filter: blur(0.5px);
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.15;
+  }
+  90% {
+    opacity: 0.15;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* ═══ DESKTOP LAYOUT ═══ */
+@media (min-width: 768px) {
+  .screen {
+    max-width: 480px;
+    margin: 0 auto;
+    border-left: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+  }
+
+  .splash-bg,
+  .particles {
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .toast-container {
+    max-width: 420px;
+  }
+
+  .modal-overlay {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal {
+    max-width: 480px;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-subtle);
+    max-height: 85vh;
+  }
+
+  .bankrupt-popup,
+  .victory-popup {
+    max-width: 420px;
+  }
+
+  #bank-actions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ═══ SHARE BUTTON ═══ */
+.share-btn {
+  margin-top: 8px;
+  gap: 10px;
+}
+
+/* ═══ UNDO BUTTON ═══ */
+.action-undo {
+  background: linear-gradient(135deg, #636e72, #b2bec3);
+  color: white;
+  box-shadow: 0 4px 20px rgba(99, 110, 114, 0.3);
+}
+
+/* ═══ VICTORY SCREEN ═══ */
+.victory-popup {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: 40px 24px 32px;
+  margin: auto 16px;
+  text-align: center;
+  animation: victoryIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(255, 209, 102, 0.3);
+  box-shadow: 0 0 60px rgba(255, 209, 102, 0.15);
+  width: 100%;
+  max-width: 380px;
+}
+
+@keyframes victoryIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+.victory-crown {
+  font-size: 80px;
+  margin-bottom: 8px;
+  animation: crownBounce 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(255, 209, 102, 0.5));
+}
+
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.1); }
+}
+
+.victory-title {
+  font-size: 28px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--gold), #fff, var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.victory-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.victory-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-glass);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.stat-row.winner {
+  border-color: var(--gold);
+  background: var(--gold-bg);
+  box-shadow: 0 0 15px rgba(255, 209, 102, 0.1);
+}
+
+.stat-row.bankrupt-row {
+  opacity: 0.5;
+}
+
+.stat-emoji {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.stat-name {
+  flex: 1;
+  font-weight: 600;
+  text-align: left;
+}
+
+.stat-balance {
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.stat-balance.positive {
+  color: var(--success);
+}
+
+.stat-balance.zero {
+  color: var(--text-muted);
+}

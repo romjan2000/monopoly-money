@@ -15,6 +15,7 @@
     <!-- ═══ SPLASH SCREEN ═══ -->
     <div id="screen-splash" class="screen active">
         <div class="splash-bg"></div>
+        <div class="particles" id="particles"></div>
         <div class="splash-content">
             <div class="logo-container">
                 <div class="logo-icon">💰</div>
@@ -103,6 +104,9 @@
                     <span class="btn-icon">🗳️</span> Start Banker Vote
                 </button>
             </div>
+            <button id="btn-share-room" class="btn btn-secondary btn-lg btn-full share-btn">
+                <span class="btn-icon">📲</span> Share Room Link
+            </button>
             <div class="lobby-waiting hidden" id="lobby-waiting">
                 <div class="pulse-dot"></div>
                 <p>Waiting for host to start...</p>
@@ -150,6 +154,18 @@
             </button>
         </div>
 
+        <!-- যাত্রা শুরু (GO Money) Button -->
+        <div class="go-money-section" id="go-money-section">
+            <button class="go-money-btn" id="btn-go-money">
+                <span class="go-money-icon">🎲</span>
+                <div class="go-money-text-group">
+                    <span class="go-money-text">যাত্রা শুরু</span>
+                    <span class="go-money-subtitle">Request ৳1,000 from Bank</span>
+                </div>
+                <span class="go-money-amount">৳1,000</span>
+            </button>
+        </div>
+
         <!-- Action Buttons -->
         <div class="game-actions" id="game-actions">
             <div id="player-actions">
@@ -170,6 +186,10 @@
                 <button class="action-btn action-take" id="btn-bank-take">
                     <span class="action-icon">🏧</span>
                     <span class="action-label">Collect Money</span>
+                </button>
+                <button class="action-btn action-undo" id="btn-undo-tx">
+                    <span class="action-icon">↩️</span>
+                    <span class="action-label">Undo Last</span>
                 </button>
             </div>
         </div>
@@ -262,6 +282,53 @@
                 </button>
                 <button class="btn btn-secondary btn-lg" id="btn-cancel-leave">
                     Stay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ GO MONEY REQUEST POPUP (Banker sees this) ═══ -->
+    <div class="modal-overlay hidden" id="go-request-overlay">
+        <div class="bankrupt-popup go-request-popup">
+            <div class="bankrupt-icon">🎲</div>
+            <h3 class="bankrupt-title">যাত্রা শুরু Request</h3>
+            <p class="bankrupt-info" id="go-request-info">Player wants ৳1,000 for passing GO</p>
+            <div class="bankrupt-actions">
+                <button class="btn btn-primary btn-lg" id="btn-accept-go">
+                    ✅ Accept
+                </button>
+                <button class="btn btn-danger btn-lg" id="btn-reject-go">
+                    ❌ Reject
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ VICTORY SCREEN ═══ -->
+    <div class="modal-overlay hidden" id="victory-overlay">
+        <div class="victory-popup">
+            <div class="victory-crown">🏆</div>
+            <h2 class="victory-title" id="victory-title">Player Wins!</h2>
+            <p class="victory-subtitle">Game Over</p>
+            <div class="victory-stats" id="victory-stats"></div>
+            <button class="btn btn-primary btn-lg btn-full" id="btn-new-game">
+                <span class="btn-icon">🎮</span> New Game
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══ UNDO CONFIRM POPUP ═══ -->
+    <div class="modal-overlay hidden" id="undo-overlay">
+        <div class="bankrupt-popup">
+            <div class="bankrupt-icon">↩️</div>
+            <h3 class="bankrupt-title">Undo Last Transaction?</h3>
+            <p class="bankrupt-info">This will reverse the most recent money transfer.</p>
+            <div class="bankrupt-actions">
+                <button class="btn btn-primary btn-lg" id="btn-confirm-undo">
+                    ↩️ Yes, Undo
+                </button>
+                <button class="btn btn-secondary btn-lg" id="btn-cancel-undo">
+                    Cancel
                 </button>
             </div>
         </div>

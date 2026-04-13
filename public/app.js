@@ -68,6 +68,41 @@ function showScreen(name) {
     screens[name].classList.add('active');
 }
 
+// ─── Floating Particles (Splash Screen) ───
+function createParticles() {
+    const container = $('#particles');
+    if (!container) return;
+    const symbols = ['💰', '🎲', '🏠', '💵', '💳', '⭐', '💎', '🏦', '🚗', '🎩'];
+    for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        p.style.left = Math.random() * 100 + '%';
+        p.style.fontSize = (14 + Math.random() * 18) + 'px';
+        p.style.animationDuration = (8 + Math.random() * 12) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        container.appendChild(p);
+    }
+}
+createParticles();
+
+// ─── URL Auto-Fill (Shared Room Links) ───
+(function handleUrlCode() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code && code.length === 4) {
+        // Auto-navigate to join screen and fill in code
+        setTimeout(() => {
+            showScreen('join');
+            const digits = code.split('');
+            const codeInputs = [$('#input-code-1'), $('#input-code-2'), $('#input-code-3'), $('#input-code-4')];
+            digits.forEach((d, i) => { if (codeInputs[i]) codeInputs[i].value = d; });
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }, 300);
+    }
+})();
+
 // ─── Auto-Rejoin on Page Load ───
 socket.on('connect', () => {
     const session = getSavedSession();
@@ -265,6 +300,27 @@ function renderLobby() {
     $('#btn-start-voting').disabled = gameState.players.length < 2;
 }
 
+// ─── Share Room Link ───
+$('#btn-share-room').addEventListener('click', () => {
+    if (!gameState) return;
+    const url = `${window.location.origin}${window.location.pathname}?code=${gameState.code}`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'Monopoly Money — Join My Game!',
+            text: `Join my Monopoly Money game! Room Code: ${gameState.code}`,
+            url: url
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('📋 Room link copied to clipboard!', 'success');
+        }).catch(() => {
+            // Fallback: show the URL
+            showToast(`Room: ${url}`, 'info');
+        });
+    }
+});
+
 $('#btn-start-voting').addEventListener('click', () => {
     socket.emit('start-voting', null, (res) => {
         if (!res.success) showToast(res.error, 'error');
@@ -415,9 +471,11 @@ function renderActions() {
     if (currentMode === 'bank' && isBanker) {
         $('#player-actions').classList.add('hidden');
         $('#bank-actions').classList.remove('hidden');
+        $('#go-money-section').classList.add('hidden');
     } else {
         $('#player-actions').classList.remove('hidden');
         $('#bank-actions').classList.add('hidden');
+        $('#go-money-section').classList.remove('hidden');
     }
 }
 
@@ -941,5 +999,157 @@ document.addEventListener('mousemove', (e) => {
             card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
         }
     });
+});
+
+// ═══ যাত্রা শুরু (GO MONEY REQUEST) ═══
+let pendingGoRequest = null;
+
+// Player clicks "যাত্রা শুরু" button
+$('#btn-go-money').addEventListener('click', () => {
+    const btn = $('#btn-go-money');
+    btn.disabled = true;
+
+    socket.emit('request-go-money', null, (res) => {
+        if (res.success) {
+            if (res.autoApproved) {
+                showToast('🎲 যাত্রা শুরু! ৳1,000 collected!', 'success');
+                vibrate();
+            } else {
+                showToast('🎲 Request sent to Banker — waiting for approval...', 'info');
+            }
+        } else {
+            showToast(res.error || 'Request failed', 'error');
+        }
+    });
+
+    // Re-enable after 3 seconds to prevent spam
+    setTimeout(() => { btn.disabled = false; }, 3000);
+});
+
+// Banker receives GO money request (popup)
+socket.on('go-money-request', ({ requestId, playerId, playerName, playerEmoji, amount }) => {
+    pendingGoRequest = { requestId, playerId, playerName, playerEmoji, amount };
+    $('#go-request-info').textContent = `${playerEmoji} ${playerName} is requesting ৳${formatMoney(amount)} for passing GO`;
+    $('#go-request-overlay').classList.remove('hidden');
+    vibrate();
+});
+
+// Player receives GO money result
+socket.on('go-money-result', ({ accepted, amount }) => {
+    if (accepted) {
+        showToast(`🎉 Banker approved! You received ৳${formatMoney(amount)}`, 'success');
+        fireConfetti();
+    } else {
+        showToast('❌ Banker rejected your request', 'error');
+    }
+    vibrate();
+});
+
+// Banker clicks Accept
+$('#btn-accept-go').addEventListener('click', () => {
+    if (!pendingGoRequest) return;
+
+    socket.emit('respond-go-request', {
+        playerId: pendingGoRequest.playerId,
+        accepted: true
+    }, (res) => {
+        if (res.success) {
+            showToast(`✅ Approved ৳1,000 for ${pendingGoRequest.playerName}`, 'success');
+        }
+        pendingGoRequest = null;
+    });
+
+    $('#go-request-overlay').classList.add('hidden');
+});
+
+// Banker clicks Reject
+$('#btn-reject-go').addEventListener('click', () => {
+    if (!pendingGoRequest) return;
+
+    socket.emit('respond-go-request', {
+        playerId: pendingGoRequest.playerId,
+        accepted: false
+    }, (res) => {
+        if (res.success) {
+            showToast(`❌ Rejected ${pendingGoRequest.playerName}'s request`, 'info');
+        }
+        pendingGoRequest = null;
+    });
+
+    $('#go-request-overlay').classList.add('hidden');
+});
+
+// ═══ WINNER / VICTORY SCREEN ═══
+socket.on('game-won', ({ winnerId, winnerName, winnerEmoji, winnerBalance, stats }) => {
+    vibrate();
+    fireConfetti();
+    setTimeout(() => fireConfetti(), 500);
+    setTimeout(() => fireConfetti(), 1000);
+
+    // Set title
+    $('#victory-title').textContent = `${winnerEmoji} ${winnerName} Wins!`;
+
+    // Build stats table
+    const statsContainer = $('#victory-stats');
+    statsContainer.innerHTML = '';
+
+    // Sort: winner first, then by balance desc, bankrupt last
+    stats.sort((a, b) => {
+        if (a.id === winnerId) return -1;
+        if (b.id === winnerId) return 1;
+        if (a.bankrupt && !b.bankrupt) return 1;
+        if (!a.bankrupt && b.bankrupt) return -1;
+        return b.balance - a.balance;
+    });
+
+    stats.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'stat-row' + (s.id === winnerId ? ' winner' : '') + (s.bankrupt ? ' bankrupt-row' : '');
+        row.innerHTML = `
+            <span class="stat-emoji">${s.emoji}</span>
+            <span class="stat-name">${escHtml(s.name)}${s.id === winnerId ? ' 🏆' : ''}${s.bankrupt ? ' 💀' : ''}</span>
+            <span class="stat-balance ${s.balance > 0 ? 'positive' : 'zero'}">৳${formatMoney(s.balance)}</span>
+        `;
+        statsContainer.appendChild(row);
+    });
+
+    $('#victory-overlay').classList.remove('hidden');
+});
+
+$('#btn-new-game').addEventListener('click', () => {
+    clearSession();
+    gameState = null;
+    myId = null;
+    myPrevBalance = null;
+    currentMode = 'player';
+    historyOpen = false;
+    seenTxCount = 0;
+    $('#victory-overlay').classList.add('hidden');
+    showScreen('splash');
+});
+
+// ═══ UNDO TRANSACTION (Banker only) ═══
+$('#btn-undo-tx').addEventListener('click', () => {
+    $('#undo-overlay').classList.remove('hidden');
+});
+
+$('#btn-confirm-undo').addEventListener('click', () => {
+    $('#undo-overlay').classList.add('hidden');
+    socket.emit('undo-transaction', null, (res) => {
+        if (res.success) {
+            showToast('↩️ Transaction undone!', 'success');
+        } else {
+            showToast(res.error || 'Failed to undo', 'error');
+        }
+    });
+});
+
+$('#btn-cancel-undo').addEventListener('click', () => {
+    $('#undo-overlay').classList.add('hidden');
+});
+
+socket.on('transaction-undone', ({ message }) => {
+    showToast(message, 'info');
+    vibrate();
 });
 

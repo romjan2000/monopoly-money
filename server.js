@@ -12,6 +12,12 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ─── Constants ───
+const MAX_EVENTS_PER_SEC = 15;
+const MAX_NAME_LENGTH = 16;
+const MAX_AMOUNT = 99999;
+const GAME_EXPIRY_MS = 6 * 60 * 60 * 1000; // 6 hours
+
 // ─── Game State ───
 const games = new Map();
 
@@ -56,13 +62,15 @@ function createGame(hostSocketId, hostName, startMoney) {
         code,
         hostPid,
         startMoney: startMoney || 1500,
-        state: 'lobby', // lobby | voting | playing
+        state: 'lobby', // lobby | voting | playing | ended
         players: new Map(),
         bankerId: null,
         votes: new Map(),     // voterId(pid) -> candidateId(pid)
         transactions: [],
         socketMap: new Map(), // socketId -> pid
-        pidSocketMap: new Map() // pid -> socketId
+        pidSocketMap: new Map(), // pid -> socketId
+        lastUndone: null,     // last undone transaction data (for undo feature)
+        createdAt: Date.now() // for game expiry
     };
 
     game.players.set(hostPid, {
@@ -108,8 +116,61 @@ function serializeGame(game) {
         players: Array.from(game.players.values()).filter(p => !p.bankrupt),
         allPlayers: Array.from(game.players.values()),
         votes: Array.from(game.votes.entries()),
-        transactions: game.transactions.slice(-50)
+        transactions: game.transactions.slice(-50),
+        winnerId: game.winnerId || null,
+        winnerName: game.winnerName || null
     };
+}
+
+// Helper: check if only 1 player remains (winner detection)
+function checkWinner(game) {
+    if (game.state !== 'playing') return;
+    const alive = Array.from(game.players.values()).filter(p => !p.bankrupt);
+    if (alive.length === 1) {
+        const winner = alive[0];
+        game.state = 'ended';
+        game.winnerId = winner.id;
+        game.winnerName = winner.name;
+
+        // Calculate stats for all players
+        const stats = Array.from(game.players.values()).map(p => {
+            let totalEarned = 0, totalSpent = 0;
+            game.transactions.forEach(tx => {
+                if (tx.type === 'system') return;
+                if (tx.toId === p.id) totalEarned += (tx.amount || 0);
+                if (tx.fromId === p.id) totalSpent += (tx.amount || 0);
+            });
+            return { id: p.id, name: p.name, emoji: p.emoji, balance: p.balance, totalEarned, totalSpent, bankrupt: p.bankrupt };
+        });
+
+        game.transactions.push({
+            id: Date.now(),
+            type: 'system',
+            message: `🏆 ${winner.emoji} ${winner.name} WINS THE GAME!`,
+            timestamp: new Date().toISOString()
+        });
+
+        io.to(game.code).emit('game-won', {
+            winnerId: winner.id,
+            winnerName: winner.name,
+            winnerEmoji: winner.emoji,
+            winnerBalance: winner.balance,
+            stats
+        });
+    }
+}
+
+// Helper: sanitize player name
+function sanitizeName(name) {
+    if (!name || typeof name !== 'string') return '';
+    return name.trim().slice(0, MAX_NAME_LENGTH).replace(/[<>]/g, '');
+}
+
+// Helper: validate amount
+function validateAmount(amount) {
+    const amt = parseInt(amount);
+    if (isNaN(amt) || amt <= 0 || amt > MAX_AMOUNT) return null;
+    return amt;
 }
 
 function findAvailableSlot(game) {
@@ -178,9 +239,38 @@ function transferHost(game, leavingPid) {
     }
 }
 
+// ─── Rate Limiting ───
+const socketEventCounts = new Map();
+setInterval(() => socketEventCounts.clear(), 1000);
+
+function rateLimited(socketId) {
+    const count = (socketEventCounts.get(socketId) || 0) + 1;
+    socketEventCounts.set(socketId, count);
+    return count > MAX_EVENTS_PER_SEC;
+}
+
+// ─── Game Expiry (cleanup old games every 10 min) ───
+setInterval(() => {
+    const now = Date.now();
+    for (const [code, game] of games) {
+        if (now - game.createdAt > GAME_EXPIRY_MS) {
+            games.delete(code);
+            console.log(`🕐 Game ${code} expired after 6 hours`);
+        }
+    }
+}, 10 * 60 * 1000);
+
 // ─── Socket Events ───
 io.on('connection', (socket) => {
     console.log(`✅ Connected: ${socket.id}`);
+
+    // Rate limit middleware for all events
+    socket.use((packet, next) => {
+        if (rateLimited(socket.id)) {
+            return next(new Error('Rate limited'));
+        }
+        next();
+    });
 
     // ─── Rejoin (session restore after reload) ───
     socket.on('rejoin', ({ code, playerName }, cb) => {
@@ -214,19 +304,23 @@ io.on('connection', (socket) => {
     });
 
     socket.on('create-game', ({ name, startMoney }, cb) => {
-        const { game, pid } = createGame(socket.id, name, startMoney);
+        const safeName = sanitizeName(name);
+        if (!safeName) return cb({ success: false, error: 'Invalid name' });
+        const { game, pid } = createGame(socket.id, safeName, startMoney);
         socket.join(game.code);
         cb({ success: true, game: serializeGame(game), playerId: pid });
-        console.log(`🎮 Game ${game.code} created by ${name}`);
+        console.log(`🎮 Game ${game.code} created by ${safeName}`);
     });
 
     socket.on('join-game', ({ code, name }, cb) => {
+        const safeName = sanitizeName(name);
+        if (!safeName) return cb({ success: false, error: 'Invalid name' });
         const game = games.get(code);
         if (!game) return cb({ success: false, error: 'Game not found. Check your code.' });
 
         // Check if name already exists (and connected) - prevent duplicates
         for (const [_, p] of game.players) {
-            if (p.name === name && p.connected && !p.bankrupt) {
+            if (p.name === safeName && p.connected && !p.bankrupt) {
                 return cb({ success: false, error: 'A player with that name is already in the game.' });
             }
         }
@@ -241,7 +335,7 @@ io.on('connection', (socket) => {
 
         const player = {
             id: pid,
-            name,
+            name: safeName,
             balance: game.state === 'playing' ? game.startMoney : 0,
             color: PLAYER_COLORS[idx],
             emoji: PLAYER_EMOJIS[idx],
@@ -260,7 +354,7 @@ io.on('connection', (socket) => {
             game.transactions.push({
                 id: Date.now(),
                 type: 'system',
-                message: `${player.emoji} ${name} joined the game with ৳${game.startMoney}`,
+                message: `${player.emoji} ${safeName} joined the game with ৳${game.startMoney}`,
                 timestamp: new Date().toISOString()
             });
         }
@@ -270,7 +364,7 @@ io.on('connection', (socket) => {
 
         io.to(code).emit('game-update', serializeGame(game));
         cb({ success: true, game: serializeGame(game), playerId: pid });
-        console.log(`👤 ${name} joined game ${code}${game.state === 'playing' ? ' (mid-game)' : ''}`);
+        console.log(`👤 ${safeName} joined game ${code}${game.state === 'playing' ? ' (mid-game)' : ''}`);
     });
 
     socket.on('start-voting', (_, cb) => {
@@ -310,8 +404,8 @@ io.on('connection', (socket) => {
         if (sender.bankrupt) return cb?.({ success: false, error: 'You are bankrupt' });
 
         const targets = Array.isArray(toIds) ? toIds : [toIds];
-        const amt = parseInt(amount);
-        if (isNaN(amt) || amt <= 0) return cb?.({ success: false, error: 'Invalid amount' });
+        const amt = validateAmount(amount);
+        if (!amt) return cb?.({ success: false, error: 'Invalid amount (max ৳99,999)' });
 
         // Validate all receivers
         const receivers = [];
@@ -364,8 +458,8 @@ io.on('connection', (socket) => {
         if (pid !== game.bankerId) return cb?.({ success: false, error: 'Only banker can do this' });
 
         const targets = Array.isArray(toIds) ? toIds : [toIds];
-        const amt = parseInt(amount);
-        if (isNaN(amt) || amt <= 0) return cb?.({ success: false, error: 'Invalid amount' });
+        const amt = validateAmount(amount);
+        if (!amt) return cb?.({ success: false, error: 'Invalid amount (max ৳99,999)' });
 
         const receivers = [];
         for (const tid of targets) {
@@ -405,8 +499,8 @@ io.on('connection', (socket) => {
         if (pid !== game.bankerId) return cb?.({ success: false, error: 'Only banker can do this' });
 
         const targets = Array.isArray(fromIds) ? fromIds : [fromIds];
-        const amt = parseInt(amount);
-        if (isNaN(amt) || amt <= 0) return cb?.({ success: false, error: 'Invalid amount' });
+        const amt = validateAmount(amount);
+        if (!amt) return cb?.({ success: false, error: 'Invalid amount (max ৳99,999)' });
 
         const payers = [];
         for (const fid of targets) {
@@ -476,8 +570,8 @@ io.on('connection', (socket) => {
 
         const pid = getPid(game, socket.id);
         const player = game.players.get(pid);
-        const amt = parseInt(amount);
-        if (isNaN(amt) || amt <= 0) return cb?.({ success: false, error: 'Invalid amount' });
+        const amt = validateAmount(amount);
+        if (!amt) return cb?.({ success: false, error: 'Invalid amount (max ৳99,999)' });
         if (player.bankrupt) return cb?.({ success: false, error: 'You are bankrupt' });
 
         if (player.balance < amt) {
@@ -543,6 +637,7 @@ io.on('connection', (socket) => {
         socket.leave(game.code);
 
         io.to(game.code).emit('game-update', serializeGame(game));
+        checkWinner(game);
         cb?.({ success: true });
     });
 
@@ -605,6 +700,7 @@ io.on('connection', (socket) => {
         socket.leave(game.code);
 
         io.to(game.code).emit('game-update', serializeGame(game));
+        checkWinner(game);
         cb?.({ success: true });
 
         // Clean up empty games
@@ -623,6 +719,144 @@ io.on('connection', (socket) => {
         if (game.state !== 'lobby') return cb?.({ success: false });
         game.startMoney = parseInt(amount) || 1500;
         io.to(game.code).emit('game-update', serializeGame(game));
+        cb?.({ success: true });
+    });
+
+    // ─── GO Money Request (যাত্রা শুরু) ───
+    socket.on('request-go-money', (_, cb) => {
+        const game = getGameBySocket(socket.id);
+        if (!game || game.state !== 'playing') return cb?.({ success: false, error: 'Game not active' });
+
+        const pid = getPid(game, socket.id);
+        const player = game.players.get(pid);
+        if (!player || player.bankrupt) return cb?.({ success: false, error: 'Invalid player' });
+
+        if (!game.bankerId) return cb?.({ success: false, error: 'No banker assigned' });
+
+        // If the requester IS the banker, auto-approve
+        if (pid === game.bankerId) {
+            player.balance += 1000;
+            game.transactions.push({
+                id: Date.now(),
+                type: 'bank-give',
+                fromName: '🏦 Bank',
+                toId: pid,
+                toName: player.name,
+                toEmoji: player.emoji,
+                amount: 1000,
+                reason: 'যাত্রা শুরু (Passing GO)',
+                timestamp: new Date().toISOString()
+            });
+            io.to(game.code).emit('game-update', serializeGame(game));
+            return cb?.({ success: true, autoApproved: true });
+        }
+
+        const bankerSocket = getSocketId(game, game.bankerId);
+        if (!bankerSocket) return cb?.({ success: false, error: 'Banker is not connected' });
+
+        // Send request to banker
+        io.to(bankerSocket).emit('go-money-request', {
+            requestId: Date.now().toString(),
+            playerId: pid,
+            playerName: player.name,
+            playerEmoji: player.emoji,
+            amount: 1000
+        });
+
+        cb?.({ success: true });
+    });
+
+    socket.on('respond-go-request', ({ playerId, accepted }, cb) => {
+        const game = getGameBySocket(socket.id);
+        if (!game || game.state !== 'playing') return cb?.({ success: false });
+
+        const pid = getPid(game, socket.id);
+        if (pid !== game.bankerId) return cb?.({ success: false, error: 'Only banker can respond' });
+
+        const player = game.players.get(playerId);
+        if (!player || player.bankrupt) return cb?.({ success: false, error: 'Player not found' });
+
+        if (accepted) {
+            player.balance += 1000;
+
+            game.transactions.push({
+                id: Date.now(),
+                type: 'bank-give',
+                fromName: '🏦 Bank',
+                toId: playerId,
+                toName: player.name,
+                toEmoji: player.emoji,
+                amount: 1000,
+                reason: 'যাত্রা শুরু (Passing GO)',
+                timestamp: new Date().toISOString()
+            });
+
+            const playerSocket = getSocketId(game, playerId);
+            if (playerSocket) {
+                io.to(playerSocket).emit('go-money-result', { accepted: true, amount: 1000 });
+                io.to(playerSocket).emit('money-received', { from: '🏦 Bank', amount: 1000, reason: 'যাত্রা শুরু' });
+            }
+
+            io.to(game.code).emit('game-update', serializeGame(game));
+        } else {
+            const playerSocket = getSocketId(game, playerId);
+            if (playerSocket) {
+                io.to(playerSocket).emit('go-money-result', { accepted: false });
+            }
+        }
+
+        cb?.({ success: true });
+    });
+
+    // ─── Undo Last Transaction (Banker only) ───
+    socket.on('undo-transaction', (_, cb) => {
+        const game = getGameBySocket(socket.id);
+        if (!game || game.state !== 'playing') return cb?.({ success: false, error: 'Game not active' });
+        const pid = getPid(game, socket.id);
+        if (pid !== game.bankerId) return cb?.({ success: false, error: 'Only banker can undo' });
+
+        // Find the last non-system transaction
+        let lastTx = null;
+        let lastIdx = -1;
+        for (let i = game.transactions.length - 1; i >= 0; i--) {
+            if (game.transactions[i].type !== 'system') {
+                lastTx = game.transactions[i];
+                lastIdx = i;
+                break;
+            }
+        }
+
+        if (!lastTx) return cb?.({ success: false, error: 'No transaction to undo' });
+
+        // Reverse the transaction
+        const amt = lastTx.amount || 0;
+
+        if (lastTx.type === 'transfer') {
+            const from = game.players.get(lastTx.fromId);
+            const to = game.players.get(lastTx.toId);
+            if (from && !from.bankrupt) from.balance += amt;
+            if (to && !to.bankrupt) to.balance -= amt;
+        } else if (lastTx.type === 'bank-give') {
+            const to = game.players.get(lastTx.toId);
+            if (to && !to.bankrupt) to.balance -= amt;
+        } else if (lastTx.type === 'bank-take' || lastTx.type === 'pay-bank') {
+            const from = game.players.get(lastTx.fromId);
+            if (from && !from.bankrupt) from.balance += amt;
+        }
+
+        // Remove the transaction and add undo record
+        game.transactions.splice(lastIdx, 1);
+        game.transactions.push({
+            id: Date.now(),
+            type: 'system',
+            message: `↩️ Banker undid: ${lastTx.fromName || '🏦 Bank'} → ${lastTx.toName || '🏦 Bank'} ৳${amt}`,
+            timestamp: new Date().toISOString()
+        });
+
+        io.to(game.code).emit('game-update', serializeGame(game));
+        io.to(game.code).emit('transaction-undone', {
+            message: `↩️ Banker undid the last transaction (৳${amt})`
+        });
         cb?.({ success: true });
     });
 
